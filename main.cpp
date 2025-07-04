@@ -12,29 +12,7 @@ using std::string;
 using std::ifstream;
 using std::ofstream;
 
-struct Str {
-    int x;
-    int* tt;
-    Str (int x_) {
-        this->x = x;
-        this->tt = new int[10];
-    }
-    Str () {
-        this->x = -1;
-        this->tt = new int[10];
-    }
-
-    ~Str() {
-        cout << "Deleting a str with value " << x << "\n";
-        delete[] tt;
-    }
-};
-
 int main () {
-    Str* starr = new Str[10];
-    delete[] starr;
-
-    return 0;
     MemoryAllocator<AvlNode>* avlNodesMemoryAllocator = new MemoryAllocator<AvlNode>();
     AVLTree* avl = new AVLTree(avlNodesMemoryAllocator);
     avl->insert(5);
@@ -48,7 +26,6 @@ int main () {
     cout << "Allocated: " << avlNodesMemoryAllocator->allocatedBytes << "\n";
     delete avl;
     cout << "Allocated after delete: " << avlNodesMemoryAllocator->allocatedBytes << "\n\n";
-
 
     SlNodeFactory* slNodeFactory = new SlNodeFactory();
     SkipList* sl = new SkipList(slNodeFactory);
