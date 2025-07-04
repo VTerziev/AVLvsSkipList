@@ -1,13 +1,73 @@
 #include <cstdlib>
 #include <iostream>
+#include "memory_allocator.h"
 
 using std::cout;
 
-struct SkipList {
+struct SlNode {
+    int value;
+    int count;
+    SlNode** next;
+    int level;
 
-    SkipList() {
-        this->initial = new Node(MIN_VALUE, MAX_LEVEL);
-        this->path = new Node*[MAX_LEVEL];
+    SlNode* getNextOnLevel(int level) {
+        if (this->level>level) { return next[level]; }
+        return nullptr;
+    }
+
+    SlNode(int value, int level) {
+        this->count = 1;
+        this->value = value;
+        this->next = new SlNode*[level];
+        std::fill(next, next + level, nullptr);
+        this->level = level;
+    }
+
+    ~SlNode() {
+        delete[] next;
+    }
+};
+
+struct SlNodeFactory {
+    long long allocatedBytes = 0;
+    long long maxAllocatedBytes = 0;
+    int typeSize = sizeof(SlNode);
+    int ptrTypeSize = sizeof(SlNode*);
+
+    SlNode* allocate(int value, int level) {
+        allocatedBytes += typeSize;
+        allocatedBytes += level * ptrTypeSize;
+        maxAllocatedBytes = max(maxAllocatedBytes, allocatedBytes);
+        return new SlNode(value, level);
+    }
+
+    SlNode** allocateArr(int cnt) {
+        allocatedBytes += ptrTypeSize*cnt;
+        maxAllocatedBytes = max(maxAllocatedBytes, allocatedBytes);
+        return new SlNode*[cnt];
+    }
+
+    void release(SlNode* node) {
+        allocatedBytes -= typeSize;
+        allocatedBytes -= node->level * ptrTypeSize;
+        maxAllocatedBytes = max(maxAllocatedBytes, allocatedBytes);
+        delete node;
+    }
+
+    void releaseArr(SlNode** arr, int cnt) {
+        allocatedBytes -= ptrTypeSize*cnt;
+        maxAllocatedBytes = max(maxAllocatedBytes, allocatedBytes);
+        delete[] arr;
+    }
+};
+
+struct SkipList {
+    SlNodeFactory* nodeFactory;
+
+    SkipList(SlNodeFactory* nodeFactory) {
+        this->nodeFactory = nodeFactory;
+        this->initial = this->nodeFactory->allocate(MIN_VALUE, MAX_LEVEL);
+        this->path = this->nodeFactory->allocateArr(MAX_LEVEL);
     }
 
     bool contains(int x) {
@@ -21,79 +81,59 @@ struct SkipList {
     void remove(int x) {
         internalRemove(x);
     }
-    
+
     void print() {
         printList();
-    } 
-    
-    ~SkipList() { 
-        for (Node* crr = initial; crr != nullptr ; ) {
-            Node* next = crr->next[0];
-            delete crr;
+    }
+
+    ~SkipList() {
+        for (SlNode* crr = initial; crr != nullptr ; ) {
+            SlNode* next = crr->next[0];
+            this->nodeFactory->release(crr);
+//            delete crr;
             crr = next;
         }
-        delete[] path;
+        this->nodeFactory->releaseArr(path, MAX_LEVEL);
+//        delete[] path;
     }
 private:
     int MAX_LEVEL = 1;
     int MIN_VALUE = -1<<30;
 
-    struct Node {
-        int value;
-        int count;
-        Node** next;
-        int level;
+    SlNode* initial;
+    SlNode** path;
 
-        Node* getNextOnLevel(int level) {
-            if (this->level>level) { return next[level]; }
-            return nullptr;
-        }
-
-        Node(int value, int level) {
-            this->count = 1;
-            this->value = value;
-            this->next = new Node*[level];
-            std::fill(next, next + level, nullptr);
-            this->level = level;
-        }
-
-        ~Node() {
-            delete[] next;
-        }
-    };
-
-    Node* initial;
-    Node** path;
-
-    Node* constructNewInitial(int newMaxLevel) {
-        Node* newInitial = new Node(MIN_VALUE, newMaxLevel);
+    SlNode* constructNewInitial(int newMaxLevel) {
+        SlNode* newInitial = this->nodeFactory->allocate(MIN_VALUE, newMaxLevel);
         for (int i = 0 ; i < MAX_LEVEL; i ++ ) {
             newInitial->next[i] = initial->next[i];
         }
         return newInitial;
     }
 
-    Node** constructNewPath(int newMaxLevel, Node* newInitial) {
-        Node** newPath = new Node*[newMaxLevel];
-        for (int i = 0 ; i < MAX_LEVEL ; i ++ ) { 
+    SlNode** constructNewPath(int newMaxLevel, SlNode* newInitial) {
+        SlNode** newPath = this->nodeFactory->allocateArr(newMaxLevel);
+        for (int i = 0 ; i < MAX_LEVEL ; i ++ ) {
             if (path[i] == initial) {
                 newPath[i] = newInitial;
             } else {
                 newPath[i] = path[i];
             }
         }
-        for (int i = MAX_LEVEL ; i < newMaxLevel ; i ++ ) { 
+        for (int i = MAX_LEVEL ; i < newMaxLevel ; i ++ ) {
             newPath[i] = newInitial;
         }
         return newPath;
     }
 
     void increaseMaxLevel(int newMaxLevel) {
-        Node* newInitial = constructNewInitial(newMaxLevel);
-        Node** newPath = constructNewPath(newMaxLevel, newInitial);
+        SlNode* newInitial = constructNewInitial(newMaxLevel);
+        SlNode** newPath = constructNewPath(newMaxLevel, newInitial);
 
-        delete initial;
-        delete[] path;
+        this->nodeFactory->release(initial);
+        this->nodeFactory->releaseArr(path, MAX_LEVEL);
+//        delete initial;
+//        delete[] path;
 
         initial = newInitial;
         path = newPath;
@@ -107,7 +147,7 @@ private:
     }
 
     void findPath(int value) {
-        Node* current = initial;
+        SlNode* current = initial;
         for (int level = MAX_LEVEL-1 ; level >= 0 ; level -- ) {
             while (current->getNextOnLevel(level) != nullptr && current->getNextOnLevel(level)->value<value) {
                 current = current->getNextOnLevel(level);
@@ -118,7 +158,7 @@ private:
 
     void internalInsert(int value) {
         findPath(value);
-        Node* current = path[0];
+        SlNode* current = path[0];
 
         current = current->getNextOnLevel(0);
         if (current != nullptr && current->value == value) {
@@ -128,7 +168,7 @@ private:
             if (newLevel > MAX_LEVEL) {
                 increaseMaxLevel(newLevel);
             }
-            Node* newNode = new Node(value, newLevel);
+            SlNode* newNode = this->nodeFactory->allocate(value, newLevel);
             for (int level = 0 ; level < newLevel ; level ++ ) {
                 newNode->next[level] = path[level]->next[level];
                 path[level]->next[level] = newNode;
@@ -138,7 +178,7 @@ private:
 
     void internalRemove(int value) {
         findPath(value);
-        Node* current = path[0];
+        SlNode* current = path[0];
         current = current->getNextOnLevel(0);
 
         if (current != nullptr && current->value == value) {
@@ -147,20 +187,21 @@ private:
                 for (int level = 0 ; level < current->level ; level ++ ) {
                     path[level]->next[level] = current->getNextOnLevel(level);
                 }
-                delete current;
+                this->nodeFactory->release(current);
+//                delete current;
             }
         }
     }
 
     bool internalContains(int value) {
         findPath(value);
-        Node* current = path[0];
+        SlNode* current = path[0];
         current = current->getNextOnLevel(0);
         return current != nullptr && current->value == value;
     }
 
     void printList() {
-        for (Node *crr = initial ; crr != nullptr ; crr = crr->next[0]) {
+        for (SlNode* crr = initial ; crr != nullptr ; crr = crr->next[0]) {
             cout << crr->value << " : ";
             for ( int lvl = 0 ; lvl < MAX_LEVEL ; lvl ++ ) {
                 if (lvl < crr->level) {

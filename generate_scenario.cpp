@@ -1,6 +1,9 @@
 #include <fstream>
+#include <iostream>
 #include <cstdlib>
 #include <string>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include "scenario.h"
 using std::vector;
 using std::string;
@@ -18,6 +21,7 @@ string generateRandomCommand() {
     return INSERT_COMMAND;
 }
 
+// TODO: create folder if it doesn't exist
 string OUTPUT_FOLDER = "tests/";
 
 void generateScenario1() { /// insert in ascending order
@@ -90,7 +94,7 @@ void generateScenario6() { /// insert many elements then delete them
     fout.close();
 }
 
-void generateScenario7() { /// insert and delete 
+void generateScenario7() { /// insert and delete
     ofstream fout;
     fout.open(OUTPUT_FOLDER+"7.in");
     for ( int i = 0 ; i < 1000000 ; i ++ ) {
@@ -101,7 +105,7 @@ void generateScenario7() { /// insert and delete
     fout.close();
 }
 
-void generateScenario8() { /// insert, contains and delete 
+void generateScenario8() { /// insert, contains and delete
     ofstream fout;
     fout.open(OUTPUT_FOLDER+"8.in");
     for ( int i = 0 ; i < 1000000 ; i ++ ) {
@@ -113,7 +117,7 @@ void generateScenario8() { /// insert, contains and delete
     fout.close();
 }
 
-void generateScenario9() { /// many random inserts, many random contains then many random deletes 
+void generateScenario9() { /// many random inserts, many random contains then many random deletes
     ofstream fout;
     fout.open(OUTPUT_FOLDER+"9.in");
     for ( int i = 0 ; i < 1000000 ; i ++ ) {
@@ -129,7 +133,7 @@ void generateScenario9() { /// many random inserts, many random contains then ma
     fout.close();
 }
 
-void generateScenario10() { /// random inserts, contains and deletes 
+void generateScenario10() { /// random inserts, contains and deletes
     ofstream fout;
     fout.open(OUTPUT_FOLDER+"10.in");
     for ( int i = 0 ; i < 1000000 ; i ++ ) {
@@ -171,7 +175,7 @@ void generateScenario13() { /// random all
     fout.close();
 }
 
-void generateScenario14() { /// almost inserting in increasing order 
+void generateScenario14() { /// almost inserting in increasing order
     ofstream fout;
     fout.open(OUTPUT_FOLDER+"14.in");
     for ( int i = 0 ; i < 1000000 ; i ++ ) {
@@ -230,8 +234,20 @@ void generateScenario17() { /// random inserts and then delete those elements
     insertedNumbers.clear();
 }
 
+void generateFolderIfNotExists() {
+    int status = mkdir(OUTPUT_FOLDER.c_str(), 0777);
+    if (status == -1) {
+        if (errno == EEXIST) {
+            std::cout << "Folder already exists\n";
+        } else {
+            std::cout << "Result of creating the folder : " << status << "\n";
+        }
+    }
+}
+
 int main () {
     srand(1337);
+    generateFolderIfNotExists();
 
     generateScenario1();
     generateScenario2();

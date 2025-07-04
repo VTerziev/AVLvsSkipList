@@ -19,8 +19,9 @@ long long timeSinceEpochMillisec() {
 
 long long executionMillisecondsAvl(Scenario* scenario) {
     long long startTime = timeSinceEpochMillisec();
-    
-    AVLTree* avl = new AVLTree();
+
+    MemoryAllocator<AvlNode>* memoryAllocator = new MemoryAllocator<AvlNode>();
+    AVLTree* avl = new AVLTree(memoryAllocator);
     for (int i = 0 ; i < scenario->size() ; i ++) {
         if (scenario->commands[i][0]=='c') {
             avl->contains(scenario->values[i]);
@@ -40,7 +41,8 @@ long long executionMillisecondsAvl(Scenario* scenario) {
 long long executionMillisecondsSkipList(Scenario* scenario) {
     long long startTime = timeSinceEpochMillisec();
 
-    SkipList* skipList = new SkipList();
+    SlNodeFactory* nodeFactory = new SlNodeFactory();
+    SkipList* skipList = new SkipList(nodeFactory);
     for (int i = 0 ; i < scenario->size() ; i ++) {
         if (scenario->commands[i][0]=='c') {
             skipList->contains(scenario->values[i]);
@@ -65,10 +67,19 @@ void readScenario(ifstream* fin, Scenario* scenario) {
     }
 }
 
+string generateId (int digitCount) {
+    string result = "";
+    for (int i = 0 ; i < digitCount ; i ++ ) {
+        result += rand()%10 + '0';
+    }
+    return result;
+}
+
 int main () {
     srand(1337);
 
     vector<string> SCENARIOS_LIST = vector<string>();
+    // TODO: find the tests automatically
     SCENARIOS_LIST.push_back("1.in");
     SCENARIOS_LIST.push_back("2.in");
     SCENARIOS_LIST.push_back("3.in");
@@ -88,11 +99,11 @@ int main () {
     SCENARIOS_LIST.push_back("17.in");
 
     string INPUT_FOLDER = "tests/";
-    string OUTPUT_LOCATION = "result.out";
+    string OUTPUT_LOCATION = "result" + generateId(10) + ".out";
     ofstream fout;
     fout.open(OUTPUT_LOCATION);
 
-    fout << "  AVL  Skip-List\n";
+    fout << "No, AVL, Skip-List\n";
 
     for (int i = 0 ; i < SCENARIOS_LIST.size() ; i ++ ){
         ifstream scenarioInput;
@@ -108,7 +119,7 @@ int main () {
         long long millisecondsSkipList = executionMillisecondsSkipList(scenario);
         cout << "skip list time: " << millisecondsSkipList << "\n";
 
-        // fout << i+1 << ". " << millisecondsAvl << " " << millisecondsSkipList << "\n";
+        fout << i+1 << ", " << millisecondsAvl << ", " << millisecondsSkipList << "\n";
         delete scenario;
     }
     fout.close();
