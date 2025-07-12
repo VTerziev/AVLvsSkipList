@@ -2,9 +2,9 @@
 #include <fstream>
 #include <cstring>
 #include <ctime>
-#include "skip_list.h"
-#include "avl.h"
-#include "scenario.h"
+#include "skip_list.cpp"
+#include "avl.cpp"
+#include "scenario.cpp"
 
 using std::ifstream;
 using std::ofstream;

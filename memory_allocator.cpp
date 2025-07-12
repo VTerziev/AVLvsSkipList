@@ -5,19 +5,22 @@
 using std::max;
 
 template <typename T>
-struct MemoryAllocator {
+struct MemoryAllocator
+{
     long long allocatedBytes = 0;
     long long maxAllocatedBytes = 0;
     int typeSize = sizeof(T);
 
-    T* allocate() {
-        T* ret = new T();
+    T *allocate()
+    {
+        T *ret = new T();
         allocatedBytes += typeSize;
         maxAllocatedBytes = max(maxAllocatedBytes, allocatedBytes);
         return ret;
     }
 
-    void release(T* t) {
+    void release(T *t)
+    {
         allocatedBytes -= typeSize;
         maxAllocatedBytes = max(maxAllocatedBytes, allocatedBytes);
         delete t;
