@@ -3,7 +3,7 @@
 #include <cstring>
 #include <ctime>
 #include "skip_list.cpp"
-#include "avl.cpp"
+#include "avl.h"
 #include "scenario.cpp"
 
 using std::ifstream;
