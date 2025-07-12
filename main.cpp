@@ -5,16 +5,16 @@
 #include "skip_list.h"
 #include "avl.h"
 #include "scenario.h"
-#include <chrono>
 
-using std::vector;
-using std::string;
 using std::ifstream;
 using std::ofstream;
+using std::string;
+using std::vector;
 
-int main () {
-    MemoryAllocator<AvlNode>* avlNodesMemoryAllocator = new MemoryAllocator<AvlNode>();
-    AVLTree* avl = new AVLTree(avlNodesMemoryAllocator);
+int main()
+{
+    MemoryAllocator<AvlNode> *avlNodesMemoryAllocator = new MemoryAllocator<AvlNode>();
+    AVLTree *avl = new AVLTree(avlNodesMemoryAllocator);
     avl->insert(5);
     avl->insert(4);
     avl->insert(3);
@@ -27,8 +27,8 @@ int main () {
     delete avl;
     cout << "Allocated after delete: " << avlNodesMemoryAllocator->allocatedBytes << "\n\n";
 
-    SlNodeFactory* slNodeFactory = new SlNodeFactory();
-    SkipList* sl = new SkipList(slNodeFactory);
+    SlNodeFactory *slNodeFactory = new SlNodeFactory();
+    SkipList *sl = new SkipList(slNodeFactory);
     sl->insert(5);
     sl->insert(4);
     sl->insert(3);
