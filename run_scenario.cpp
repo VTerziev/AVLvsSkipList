@@ -14,8 +14,7 @@ using std::vector;
 
 long long timeSinceEpochMillisec() {
   using namespace std::chrono;
-  return duration_cast<milliseconds>(system_clock::now().time_since_epoch())
-      .count();
+  return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
 
 template <typename T> long long executionMilliseconds(Scenario *scenario) {
@@ -98,8 +97,7 @@ int main() {
     long long millisecondsSkipList = executionMilliseconds<SkipList>(&scenario);
     cout << "skip list time: " << millisecondsSkipList << "\n";
 
-    fout << i + 1 << ", " << millisecondsAvl << ", " << millisecondsSkipList
-         << "\n";
+    fout << i + 1 << ", " << millisecondsAvl << ", " << millisecondsSkipList << "\n";
   }
   fout.close();
   return 0;
