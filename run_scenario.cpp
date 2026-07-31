@@ -87,20 +87,19 @@ int main() {
   for (int i = 0; i < SCENARIOS_LIST.size(); i++) {
     ifstream scenarioInput;
     scenarioInput.open(INPUT_FOLDER + SCENARIOS_LIST[i]);
-    Scenario *scenario = new Scenario();
-    readScenario(&scenarioInput, scenario);
+    Scenario scenario = Scenario();
+    readScenario(&scenarioInput, &scenario);
     scenarioInput.close();
 
     cout << "starting execution of " << SCENARIOS_LIST[i] << "\n";
-    long long millisecondsAvl = executionMilliseconds<AVLTree>(scenario);
+    long long millisecondsAvl = executionMilliseconds<AVLTree>(&scenario);
     cout << "avl time: " << millisecondsAvl << "\n";
 
-    long long millisecondsSkipList = executionMilliseconds<SkipList>(scenario);
+    long long millisecondsSkipList = executionMilliseconds<SkipList>(&scenario);
     cout << "skip list time: " << millisecondsSkipList << "\n";
 
     fout << i + 1 << ", " << millisecondsAvl << ", " << millisecondsSkipList
          << "\n";
-    delete scenario;
   }
   fout.close();
   return 0;
