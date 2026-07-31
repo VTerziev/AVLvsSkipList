@@ -1,4 +1,5 @@
 #include "avl.h"
+#include "container.h"
 #include "scenario.cpp"
 #include "skip_list.cpp"
 #include "skip_list_vec.cpp"
@@ -11,49 +12,37 @@ using std::ifstream;
 using std::ofstream;
 using std::string;
 
-int main() {
-  AVLTree *avl = Allocator::allocate<AVLTree>();
-  avl->insert(5);
-  avl->insert(4);
-  avl->insert(3);
-  avl->insert(1);
-  cout << 6 << ": " << avl->contains(6) << "\n";
-  cout << 1 << ": " << avl->contains(1) << "\n";
-  cout << 2 << ": " << avl->contains(2) << "\n";
-  cout << 3 << ": " << avl->contains(3) << "\n";
+void exec(Container *c) {
+  c->insert(5);
+  c->insert(4);
+  c->insert(3);
+  c->insert(1);
+  cout << 6 << ": " << c->contains(6) << "\n";
+  cout << 1 << ": " << c->contains(1) << "\n";
+  cout << 2 << ": " << c->contains(2) << "\n";
+  cout << 3 << ": " << c->contains(3) << "\n";
+
   cout << "Allocated: " << Allocator::allocatedBytes << "\n";
+}
+
+int main() {
+
+  AVLTree *avl = Allocator::allocate<AVLTree>();
+  exec(avl);
   Allocator::release(avl);
   cout << "Allocated after delete: " << Allocator::allocatedBytes << "\n\n";
 
   Allocator::reset();
 
   SkipList *sl = Allocator::allocate<SkipList>();
-  sl->insert(5);
-  sl->insert(4);
-  sl->insert(3);
-  sl->insert(1);
-  cout << 6 << ": " << sl->contains(6) << "\n";
-  cout << 1 << ": " << sl->contains(1) << "\n";
-  cout << 2 << ": " << sl->contains(2) << "\n";
-  cout << 3 << ": " << sl->contains(3) << "\n";
-
-  cout << "Allocated: " << Allocator::allocatedBytes << "\n";
+  exec(sl);
   Allocator::release(sl);
-  cout << "Allocated: " << Allocator::allocatedBytes << "\n\n";
+  cout << "Allocated after delete: " << Allocator::allocatedBytes << "\n\n";
 
   SkipListVec *slv = Allocator::allocate<SkipListVec>();
-  slv->insert(5);
-  slv->insert(4);
-  slv->insert(3);
-  slv->insert(1);
-  cout << 6 << ": " << slv->contains(6) << "\n";
-  cout << 1 << ": " << slv->contains(1) << "\n";
-  cout << 2 << ": " << slv->contains(2) << "\n";
-  cout << 3 << ": " << slv->contains(3) << "\n";
-
-  cout << "Allocated: " << Allocator::allocatedBytes << "\n";
+  exec(slv);
   Allocator::release(slv);
-  cout << "Allocated: " << Allocator::allocatedBytes << "\n\n";
+  cout << "Allocated after delete: " << Allocator::allocatedBytes << "\n\n";
 
   return 0;
 }

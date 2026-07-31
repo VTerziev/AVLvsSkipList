@@ -1,3 +1,5 @@
+#include "container.h"
+
 #ifndef AVL_GUARD
 #define AVL_GUARD
 
@@ -18,7 +20,7 @@ private:
   friend class AVLTree;
 };
 
-struct AVLTree {
+struct AVLTree : Container {
   AVLTree();
   bool contains(int x);
   void insert(int x);

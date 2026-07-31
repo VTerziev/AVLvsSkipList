@@ -18,42 +18,22 @@ long long timeSinceEpochMillisec() {
       .count();
 }
 
-long long executionMillisecondsAvl(Scenario *scenario) {
+template <typename T> long long executionMilliseconds(Scenario *scenario) {
   long long startTime = timeSinceEpochMillisec();
 
-  AVLTree *avl = new AVLTree();
+  Container *c = new T();
   for (int i = 0; i < scenario->size(); i++) {
     if (scenario->commands[i][0] == 'c') {
-      avl->contains(scenario->values[i]);
+      c->contains(scenario->values[i]);
     } else if (scenario->commands[i][0] == 'i') {
-      avl->insert(scenario->values[i]);
+      c->insert(scenario->values[i]);
     } else if (scenario->commands[i][0] == 'd') {
-      avl->remove(scenario->values[i]);
+      c->remove(scenario->values[i]);
     } else {
       throw std::invalid_argument("Command not recognized");
     }
   }
-  delete avl;
-  long long endTime = timeSinceEpochMillisec();
-  return endTime - startTime;
-}
-
-long long executionMillisecondsSkipList(Scenario *scenario) {
-  long long startTime = timeSinceEpochMillisec();
-
-  SkipList *skipList = new SkipList();
-  for (int i = 0; i < scenario->size(); i++) {
-    if (scenario->commands[i][0] == 'c') {
-      skipList->contains(scenario->values[i]);
-    } else if (scenario->commands[i][0] == 'i') {
-      skipList->insert(scenario->values[i]);
-    } else if (scenario->commands[i][0] == 'd') {
-      skipList->remove(scenario->values[i]);
-    } else {
-      throw std::invalid_argument("Command not recognized");
-    }
-  }
-  delete skipList;
+  delete c;
   long long endTime = timeSinceEpochMillisec();
   return endTime - startTime;
 }
@@ -112,10 +92,10 @@ int main() {
     scenarioInput.close();
 
     cout << "starting execution of " << SCENARIOS_LIST[i] << "\n";
-    long long millisecondsAvl = executionMillisecondsAvl(scenario);
+    long long millisecondsAvl = executionMilliseconds<AVLTree>(scenario);
     cout << "avl time: " << millisecondsAvl << "\n";
 
-    long long millisecondsSkipList = executionMillisecondsSkipList(scenario);
+    long long millisecondsSkipList = executionMilliseconds<SkipList>(scenario);
     cout << "skip list time: " << millisecondsSkipList << "\n";
 
     fout << i + 1 << ", " << millisecondsAvl << ", " << millisecondsSkipList

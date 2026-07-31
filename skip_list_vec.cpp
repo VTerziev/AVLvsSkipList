@@ -1,36 +1,37 @@
 #include "allocator.cpp"
+#include "container.h"
 #include <cstdlib>
 #include <iostream>
 #include <vector>
 
 using std::cout;
 
-struct SlNode {
+struct SlNodeVec {
   int value;
   int count;
-  std::vector<SlNode *> next;
+  std::vector<SlNodeVec *> next;
   int level;
 
-  SlNode *getNextOnLevel(int level) {
+  SlNodeVec *getNextOnLevel(int level) {
     if (this->level > level) {
       return next[level];
     }
     return nullptr;
   }
 
-  SlNode(int value, int level) {
+  SlNodeVec(int value, int level) {
     this->count = 1;
     this->value = value;
-    this->next = std::vector<SlNode *>(level);
+    this->next = std::vector<SlNodeVec *>(level);
     this->level = level;
   }
 };
 
-struct SkipListVec {
+struct SkipListVec : Container {
 
   SkipListVec() {
-    this->initial = Allocator::allocate<SlNode>(MIN_VALUE, MAX_LEVEL);
-    this->path = std::vector<SlNode *>(MAX_LEVEL);
+    this->initial = Allocator::allocate<SlNodeVec>(MIN_VALUE, MAX_LEVEL);
+    this->path = std::vector<SlNodeVec *>(MAX_LEVEL);
   }
 
   bool contains(int x) { return internalContains(x); }
@@ -42,8 +43,8 @@ struct SkipListVec {
   void print() { printList(); }
 
   ~SkipListVec() {
-    for (SlNode *crr = initial; crr != nullptr;) {
-      SlNode *next = crr->next[0];
+    for (SlNodeVec *crr = initial; crr != nullptr;) {
+      SlNodeVec *next = crr->next[0];
       Allocator::release(crr);
       crr = next;
     }
@@ -53,19 +54,21 @@ private:
   int MAX_LEVEL = 1;
   int MIN_VALUE = -(1 << 30);
 
-  SlNode *initial;
-  std::vector<SlNode *> path;
+  SlNodeVec *initial;
+  std::vector<SlNodeVec *> path;
 
-  SlNode *constructNewInitial(int newMaxLevel) {
-    SlNode *newInitial = Allocator::allocate<SlNode>(MIN_VALUE, newMaxLevel);
+  SlNodeVec *constructNewInitial(int newMaxLevel) {
+    SlNodeVec *newInitial =
+        Allocator::allocate<SlNodeVec>(MIN_VALUE, newMaxLevel);
     for (int i = 0; i < MAX_LEVEL; i++) {
       newInitial->next[i] = initial->next[i];
     }
     return newInitial;
   }
 
-  std::vector<SlNode *> constructNewPath(int newMaxLevel, SlNode *newInitial) {
-    std::vector<SlNode *> newPath = std::vector<SlNode *>(newMaxLevel);
+  std::vector<SlNodeVec *> constructNewPath(int newMaxLevel,
+                                            SlNodeVec *newInitial) {
+    std::vector<SlNodeVec *> newPath = std::vector<SlNodeVec *>(newMaxLevel);
     for (int i = 0; i < MAX_LEVEL; i++) {
       if (path[i] == initial) {
         newPath[i] = newInitial;
@@ -80,8 +83,9 @@ private:
   }
 
   void increaseMaxLevel(int newMaxLevel) {
-    SlNode *newInitial = constructNewInitial(newMaxLevel);
-    std::vector<SlNode *> newPath = constructNewPath(newMaxLevel, newInitial);
+    SlNodeVec *newInitial = constructNewInitial(newMaxLevel);
+    std::vector<SlNodeVec *> newPath =
+        constructNewPath(newMaxLevel, newInitial);
 
     Allocator::release(initial);
 
@@ -98,7 +102,7 @@ private:
   }
 
   void findPath(int value) {
-    SlNode *current = initial;
+    SlNodeVec *current = initial;
     for (int level = MAX_LEVEL - 1; level >= 0; level--) {
       while (current->getNextOnLevel(level) != nullptr &&
              current->getNextOnLevel(level)->value < value) {
@@ -110,7 +114,7 @@ private:
 
   void internalInsert(int value) {
     findPath(value);
-    SlNode *current = path[0];
+    SlNodeVec *current = path[0];
 
     current = current->getNextOnLevel(0);
     if (current != nullptr && current->value == value) {
@@ -120,7 +124,7 @@ private:
       if (newLevel > MAX_LEVEL) {
         increaseMaxLevel(newLevel);
       }
-      SlNode *newNode = Allocator::allocate<SlNode>(value, newLevel);
+      SlNodeVec *newNode = Allocator::allocate<SlNodeVec>(value, newLevel);
       for (int level = 0; level < newLevel; level++) {
         newNode->next[level] = path[level]->next[level];
         path[level]->next[level] = newNode;
@@ -130,7 +134,7 @@ private:
 
   void internalRemove(int value) {
     findPath(value);
-    SlNode *current = path[0];
+    SlNodeVec *current = path[0];
     current = current->getNextOnLevel(0);
 
     if (current != nullptr && current->value == value) {
@@ -146,13 +150,13 @@ private:
 
   bool internalContains(int value) {
     findPath(value);
-    SlNode *current = path[0];
+    SlNodeVec *current = path[0];
     current = current->getNextOnLevel(0);
     return current != nullptr && current->value == value;
   }
 
   void printList() {
-    for (SlNode *crr = initial; crr != nullptr; crr = crr->next[0]) {
+    for (SlNodeVec *crr = initial; crr != nullptr; crr = crr->next[0]) {
       cout << crr->value << " : ";
       for (int lvl = 0; lvl < MAX_LEVEL; lvl++) {
         if (lvl < crr->level) {
