@@ -1,6 +1,7 @@
 #include "avl.h"
 #include "container.h"
-#include "scenario.cpp"
+#include "hash_set_c.cpp"
+#include "scenarios/scenario.cpp"
 #include "skip_list.cpp"
 #include "skip_list_vec.cpp"
 #include <cstring>
@@ -42,6 +43,11 @@ int main() {
   SkipListVec *slv = Allocator::allocate<SkipListVec>();
   exec(slv);
   Allocator::release(slv);
+  cout << "Allocated after delete: " << Allocator::allocatedBytes << "\n\n";
+
+  HashSet *hs = Allocator::allocate<HashSet>();
+  exec(hs);
+  Allocator::release(hs);
   cout << "Allocated after delete: " << Allocator::allocatedBytes << "\n\n";
 
   return 0;

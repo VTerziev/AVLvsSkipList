@@ -7,10 +7,10 @@ main: prepare avl.o
 	${COMPILER} -g -o $(BUILD_DIR)/main main.cpp $(BUILD_DIR)/avl.o
 
 generate_scenario: prepare
-	${COMPILER} -g -o $(BUILD_DIR)/generate_scenario generate_scenario.cpp $(BUILD_DIR)/avl.o
+	${COMPILER} -g -o $(BUILD_DIR)/generate_scenario scenarios/generate_scenario.cpp $(BUILD_DIR)/avl.o
 
 run_scenario: prepare
-	${COMPILER} -g -o $(BUILD_DIR)/run_scenario run_scenario.cpp $(BUILD_DIR)/avl.o
+	${COMPILER} -g -o $(BUILD_DIR)/run_scenario scenarios/run_scenario.cpp $(BUILD_DIR)/avl.o
 
 avl.o: prepare
 	${COMPILER} -g -o $(BUILD_DIR)/avl.o -c avl.cpp

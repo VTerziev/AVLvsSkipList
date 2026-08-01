@@ -1,6 +1,8 @@
-#include "avl.h"
+#include "../avl.h"
+#include "../hash_set_c.cpp"
+#include "../skip_list.cpp"
+#include "../skip_list_vec.cpp"
 #include "scenario.cpp"
-#include "skip_list.cpp"
 #include <chrono>
 #include <cstring>
 #include <ctime>
@@ -81,7 +83,7 @@ int main() {
   ofstream fout;
   fout.open(OUTPUT_LOCATION);
 
-  fout << "No, AVL, Skip-List\n";
+  fout << "No, AVL, Skip-List, Skip-List-Vec\n";
 
   for (int i = 0; i < SCENARIOS_LIST.size(); i++) {
     ifstream scenarioInput;
@@ -97,7 +99,14 @@ int main() {
     long long millisecondsSkipList = executionMilliseconds<SkipList>(&scenario);
     cout << "skip list time: " << millisecondsSkipList << "\n";
 
-    fout << i + 1 << ", " << millisecondsAvl << ", " << millisecondsSkipList << "\n";
+    long long millisecondsSkipListVec = executionMilliseconds<SkipListVec>(&scenario);
+    cout << "skip list vec time: " << millisecondsSkipListVec << "\n";
+
+    long long millisecondsHashSet = executionMilliseconds<HashSet>(&scenario);
+    cout << "hash set time: " << millisecondsHashSet << "\n";
+
+    fout << i + 1 << ", " << millisecondsAvl << ", " << millisecondsSkipList << ", "
+         << millisecondsSkipListVec << ", " << millisecondsHashSet << "\n";
   }
   fout.close();
   return 0;
