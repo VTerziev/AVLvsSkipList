@@ -1,5 +1,9 @@
 #include <string>
 #include <vector>
+
+#ifndef SCENARIO_GUARD
+#define SCENARIO_GUARD
+
 using std::string;
 using std::vector;
 
@@ -23,3 +27,5 @@ struct Scenario {
 
   int size() { return values.size(); }
 };
+
+#endif

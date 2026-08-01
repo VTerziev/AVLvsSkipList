@@ -2,11 +2,13 @@
 #include "../hash_set_c.cpp"
 #include "../skip_list.cpp"
 #include "../skip_list_vec.cpp"
+#include "run_result.cpp"
 #include "scenario.cpp"
 #include <chrono>
 #include <cstring>
 #include <ctime>
 #include <fstream>
+#include <functional>
 #include <iostream>
 
 using std::ifstream;
@@ -14,15 +16,37 @@ using std::ofstream;
 using std::string;
 using std::vector;
 
+struct TestType {
+  std::string name;
+  std::function<Container *()> init;
+
+  TestType(std::string name, std::function<Container *()> init) {
+    this->name = name;
+    this->init = init;
+  }
+  std::string getName() { return name; }
+};
+
 long long timeSinceEpochMillisec() {
   using namespace std::chrono;
   return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
 
-template <typename T> long long executionMilliseconds(Scenario *scenario) {
+template <typename T> std::string prettyTypeName() {
+  std::string res = typeid(T).name();
+  while (res[0] >= '0' && res[0] <= '9') {
+    res.erase(0, 1);
+  }
+  return res;
+}
+
+RunResult runScenario(Scenario *scenario, TestType *testType) {
   long long startTime = timeSinceEpochMillisec();
 
-  Container *c = new T();
+  RunResult result = RunResult(scenario, testType->name);
+  Allocator::reset();
+
+  Container *c = testType->init();
   for (int i = 0; i < scenario->size(); i++) {
     if (scenario->commands[i][0] == 'c') {
       c->contains(scenario->values[i]);
@@ -36,7 +60,8 @@ template <typename T> long long executionMilliseconds(Scenario *scenario) {
   }
   delete c;
   long long endTime = timeSinceEpochMillisec();
-  return endTime - startTime;
+  result.finish(endTime - startTime, Allocator::maxAllocatedBytes);
+  return result;
 }
 
 void readScenario(ifstream *fin, Scenario *scenario) {
@@ -80,10 +105,21 @@ int main() {
 
   string INPUT_FOLDER = "tests/";
   string OUTPUT_LOCATION = "result" + generateId(10) + ".out";
+
+  vector<TestType> testTypes;
+  testTypes.push_back(TestType("AvlTree", []() { return new AVLTree(); }));
+  testTypes.push_back(TestType("SkipList", []() { return new SkipList(); }));
+  testTypes.push_back(TestType("SkipListVec", []() { return new SkipListVec(); }));
+  testTypes.push_back(TestType("HashSet", []() { return new HashSet(); }));
+
   ofstream fout;
   fout.open(OUTPUT_LOCATION);
 
-  fout << "No, AVL, Skip-List, Skip-List-Vec\n";
+  fout << "No";
+  for (int i = 0; i < testTypes.size(); i++) {
+    fout << ", " << testTypes[i].name;
+  }
+  fout << "\n";
 
   for (int i = 0; i < SCENARIOS_LIST.size(); i++) {
     ifstream scenarioInput;
@@ -93,20 +129,20 @@ int main() {
     scenarioInput.close();
 
     cout << "starting execution of " << SCENARIOS_LIST[i] << "\n";
-    long long millisecondsAvl = executionMilliseconds<AVLTree>(&scenario);
-    cout << "avl time: " << millisecondsAvl << "\n";
+    vector<RunResult> results;
+    for (int j = 0; j < testTypes.size(); j++) {
+      results.push_back(runScenario(&scenario, &testTypes[j]));
+    }
 
-    long long millisecondsSkipList = executionMilliseconds<SkipList>(&scenario);
-    cout << "skip list time: " << millisecondsSkipList << "\n";
+    for (int j = 0; j < results.size(); j++) {
+      cout << results[j].testedTypeName << ": " << results[j].execMs << "\n";
+    }
 
-    long long millisecondsSkipListVec = executionMilliseconds<SkipListVec>(&scenario);
-    cout << "skip list vec time: " << millisecondsSkipListVec << "\n";
-
-    long long millisecondsHashSet = executionMilliseconds<HashSet>(&scenario);
-    cout << "hash set time: " << millisecondsHashSet << "\n";
-
-    fout << i + 1 << ", " << millisecondsAvl << ", " << millisecondsSkipList << ", "
-         << millisecondsSkipListVec << ", " << millisecondsHashSet << "\n";
+    fout << i + 1;
+    for (int j = 0; j < results.size(); j++) {
+      fout << ", " << results[j].execMs;
+    }
+    fout << "\n";
   }
   fout.close();
   return 0;
